@@ -36,14 +36,14 @@ public class TraceabilityRestController {
         return ResponseEntity.ok(response);
     }
     
-    @GetMapping
+    @GetMapping("/restaurant/{restaurantId}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(summary = "Get all traceability records", description = "Retrieves all traceability records")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
     })
-    public ResponseEntity<List<TraceabilityResponseDto>> getAllTraceability() {
-        List<TraceabilityResponseDto> response = traceabilityHandler.getAllTraceability();
+    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByRestaurantId(@PathVariable String restaurantId) {
+        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByRestaurantId(restaurantId);
         return ResponseEntity.ok(response);
     }
     
@@ -58,19 +58,19 @@ public class TraceabilityRestController {
         return ResponseEntity.ok(response);
     }
     
-    @GetMapping("/client/{clientId}")
+    @GetMapping("/client")
     @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get traceability by client ID", description = "Retrieves traceability records for a specific client")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
     })
-    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByClientId(@PathVariable String clientId) {
-        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByClientId(clientId);
+    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByClientId() {
+        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByClientId();
         return ResponseEntity.ok(response);
     }
     
     @GetMapping("/employee/{employeeId}")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER')")
     @Operation(summary = "Get traceability by employee ID", description = "Retrieves traceability records for a specific employee")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")

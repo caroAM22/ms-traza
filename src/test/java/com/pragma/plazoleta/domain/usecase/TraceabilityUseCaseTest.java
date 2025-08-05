@@ -1,6 +1,8 @@
 package com.pragma.plazoleta.domain.usecase;
 
+import com.pragma.plazoleta.domain.exception.DomainException;
 import com.pragma.plazoleta.domain.model.TraceabilityModel;
+import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.spi.ITraceabilityPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,11 +29,15 @@ class TraceabilityUseCaseTest {
     @InjectMocks
     private TraceabilityUseCase traceabilityUseCase;
 
+    @Mock
+    private ISecurityContextPort securityContextPort;
+
     private TraceabilityModel traceabilityModel;
     private UUID testId;
     private UUID testOrderId;
     private UUID testClientId;
     private UUID testEmployeeId;
+    private UUID testRestaurantId;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +45,8 @@ class TraceabilityUseCaseTest {
         testOrderId = UUID.randomUUID();
         testClientId = UUID.randomUUID();
         testEmployeeId = UUID.randomUUID();
-        
+        testRestaurantId = UUID.randomUUID();
+
         traceabilityModel = TraceabilityModel.builder()
                 .id(testId)
                 .orderId(testOrderId)
@@ -51,6 +57,7 @@ class TraceabilityUseCaseTest {
                 .newState("IN_PROGRESS")
                 .employeeId(testEmployeeId)
                 .employeeEmail("employee@example.com")
+                .restaurantId(testRestaurantId)
                 .build();
     }
 
@@ -78,59 +85,42 @@ class TraceabilityUseCaseTest {
     }
 
     @Test
-    void getAllTraceability_ShouldReturnAllTraceabilityRecords() {
+    void getTraceabilityByRestaurantIdShouldReturnAllTraceabilityRecords() {
         List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
         
-        when(traceabilityPersistencePort.getAllTraceability()).thenReturn(expectedList);
-        List<TraceabilityModel> result = traceabilityUseCase.getAllTraceability();
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(expectedList);
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
+        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByRestaurantId(testRestaurantId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(traceabilityModel, result.get(0));
-        verify(traceabilityPersistencePort).getAllTraceability();
-    }
-
-    @Test
-    void getAllTraceabilityShouldReturnEmptyListWhenNoRecordsExist() {
-        when(traceabilityPersistencePort.getAllTraceability()).thenReturn(Collections.emptyList());
-        List<TraceabilityModel> result = traceabilityUseCase.getAllTraceability();
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(traceabilityPersistencePort).getAllTraceability();
+        verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
     }
 
     @Test
     void getTraceabilityByOrderIdShouldReturnTraceabilityRecords() {
         List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
 
-        when(traceabilityPersistencePort.findByOrderId(testOrderId)).thenReturn(expectedList);
+        when(traceabilityPersistencePort.findByOrderIdAndClientId(testOrderId, testClientId)).thenReturn(expectedList);
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("CUSTOMER");
+        when(securityContextPort.getUserIdOfUserAutenticated()).thenReturn(testClientId);
         List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByOrderId(testOrderId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(traceabilityModel, result.get(0));
-        verify(traceabilityPersistencePort).findByOrderId(testOrderId);
+        verify(traceabilityPersistencePort).findByOrderIdAndClientId(testOrderId, testClientId);
     }
 
     @Test
-    void getTraceabilityByOrderIdShouldReturnEmptyListWhenNoRecordsFound() {
-        UUID nonExistentOrderId = UUID.randomUUID();
-
-        when(traceabilityPersistencePort.findByOrderId(nonExistentOrderId)).thenReturn(Collections.emptyList());
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByOrderId(nonExistentOrderId);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(traceabilityPersistencePort).findByOrderId(nonExistentOrderId);
-    }
-
-    @Test
-    void getTraceabilityByClientId_ShouldReturnTraceabilityRecords() {
+    void getTraceabilityByClientIdShouldReturnTraceabilityRecords() {
         List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
 
         when(traceabilityPersistencePort.findByClientId(testClientId)).thenReturn(expectedList);
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByClientId(testClientId);
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("CUSTOMER");
+        when(securityContextPort.getUserIdOfUserAutenticated()).thenReturn(testClientId);
+        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByClientId();
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -139,22 +129,11 @@ class TraceabilityUseCaseTest {
     }
 
     @Test
-    void getTraceabilityByClientIdShouldReturnEmptyListWhenNoRecordsFound() {
-        UUID nonExistentClientId = UUID.randomUUID();
-
-        when(traceabilityPersistencePort.findByClientId(nonExistentClientId)).thenReturn(Collections.emptyList());
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByClientId(nonExistentClientId);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(traceabilityPersistencePort).findByClientId(nonExistentClientId);
-    }
-
-    @Test
     void getTraceabilityByEmployeeIdShouldReturnTraceabilityRecords() {
         List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
 
         when(traceabilityPersistencePort.findByEmployeeId(testEmployeeId)).thenReturn(expectedList);
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
         List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByEmployeeId(testEmployeeId);
 
         assertNotNull(result);
@@ -164,14 +143,18 @@ class TraceabilityUseCaseTest {
     }
 
     @Test
-    void getTraceabilityByEmployeeIdShouldReturnEmptyListWhenNoRecordsFound() {
-        UUID nonExistentEmployeeId = UUID.randomUUID();
+    void validateUserRoleShouldThrowExceptionWhenUserIsNotOwner() {
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("CUSTOMER");
+    
+        assertThrows(DomainException.class, () -> traceabilityUseCase.getTraceabilityByRestaurantId(testRestaurantId));
+        verify(securityContextPort).getRoleOfUserAutenticated();
+    }
 
-        when(traceabilityPersistencePort.findByEmployeeId(nonExistentEmployeeId)).thenReturn(Collections.emptyList());
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByEmployeeId(nonExistentEmployeeId);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(traceabilityPersistencePort).findByEmployeeId(nonExistentEmployeeId);
+    @Test
+    void validateUserRoleShouldNotThrowExceptionWhenUserIsOwner() {
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
+        traceabilityUseCase.getTraceabilityByRestaurantId(testRestaurantId);
+        verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
+        verify(securityContextPort).getRoleOfUserAutenticated();
     }
 } 

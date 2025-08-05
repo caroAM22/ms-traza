@@ -22,4 +22,5 @@ public class TraceabilityModel {
     private String newState;
     private UUID employeeId;
     private String employeeEmail;
+    private UUID restaurantId;
 } 

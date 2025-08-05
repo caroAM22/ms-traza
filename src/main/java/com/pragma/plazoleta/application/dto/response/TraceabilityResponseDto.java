@@ -21,4 +21,5 @@ public class TraceabilityResponseDto {
     private String newState;
     private String employeeId;
     private String employeeEmail;
+    private String restaurantId;
 } 

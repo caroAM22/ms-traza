@@ -29,8 +29,8 @@ public class TraceabilityHandler implements ITraceabilityHandler {
     }
     
     @Override
-    public List<TraceabilityResponseDto> getAllTraceability() {
-        var traceabilityList = traceabilityServicePort.getAllTraceability();
+    public List<TraceabilityResponseDto> getTraceabilityByRestaurantId(String restaurantId) {
+        var traceabilityList = traceabilityServicePort.getTraceabilityByRestaurantId(UUID.fromString(restaurantId));
         return traceabilityResponseMapper.toTraceabilityResponseDtoList(traceabilityList);
     }
     
@@ -41,8 +41,8 @@ public class TraceabilityHandler implements ITraceabilityHandler {
     }
     
     @Override
-    public List<TraceabilityResponseDto> getTraceabilityByClientId(String clientId) {
-        var traceabilityList = traceabilityServicePort.getTraceabilityByClientId(UUID.fromString(clientId));
+    public List<TraceabilityResponseDto> getTraceabilityByClientId() {
+        var traceabilityList = traceabilityServicePort.getTraceabilityByClientId();
         return traceabilityResponseMapper.toTraceabilityResponseDtoList(traceabilityList);
     }
     

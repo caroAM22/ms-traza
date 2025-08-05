@@ -7,8 +7,8 @@ import com.pragma.plazoleta.application.dto.response.TraceabilityResponseDto;
 
 public interface ITraceabilityHandler {
     TraceabilityResponseDto saveTraceability(TraceabilityRequestDto traceabilityRequestDto);
-    List<TraceabilityResponseDto> getAllTraceability();
+    List<TraceabilityResponseDto> getTraceabilityByRestaurantId(String restaurantId);
     List<TraceabilityResponseDto> getTraceabilityByOrderId(String orderId);
-    List<TraceabilityResponseDto> getTraceabilityByClientId(String clientId);
+    List<TraceabilityResponseDto> getTraceabilityByClientId();
     List<TraceabilityResponseDto> getTraceabilityByEmployeeId(String employeeId);
 } 

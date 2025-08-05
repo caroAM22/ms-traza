@@ -7,8 +7,8 @@ import java.util.UUID;
 
 public interface ITraceabilityServicePort {
     TraceabilityModel saveTraceability(TraceabilityModel traceabilityModel);
-    List<TraceabilityModel> getAllTraceability();
+    List<TraceabilityModel> getTraceabilityByRestaurantId(UUID restaurantId);
     List<TraceabilityModel> getTraceabilityByOrderId(UUID orderId);
-    List<TraceabilityModel> getTraceabilityByClientId(UUID clientId);
+    List<TraceabilityModel> getTraceabilityByClientId();
     List<TraceabilityModel> getTraceabilityByEmployeeId(UUID employeeId);
 } 

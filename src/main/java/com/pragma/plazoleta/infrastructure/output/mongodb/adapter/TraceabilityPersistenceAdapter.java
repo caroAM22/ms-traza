@@ -25,14 +25,14 @@ public class TraceabilityPersistenceAdapter implements ITraceabilityPersistenceP
     }
     
     @Override
-    public List<TraceabilityModel> getAllTraceability() {
-        var documents = traceabilityRepository.findAll();
+    public List<TraceabilityModel> findByRestaurantId(UUID restaurantId) {
+        var documents = traceabilityRepository.findByRestaurantId(restaurantId.toString());
         return traceabilityDocumentMapper.toTraceabilityModelList(documents);
     }
     
     @Override
-    public List<TraceabilityModel> findByOrderId(UUID orderId) {
-        var documents = traceabilityRepository.findByOrderId(orderId.toString());
+    public List<TraceabilityModel> findByOrderIdAndClientId(UUID orderId, UUID clientId) {
+        var documents = traceabilityRepository.findByOrderIdAndClientId(orderId.toString(), clientId.toString());
         return traceabilityDocumentMapper.toTraceabilityModelList(documents);
     }
     

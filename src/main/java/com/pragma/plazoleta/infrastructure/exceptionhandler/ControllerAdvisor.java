@@ -1,6 +1,6 @@
 package com.pragma.plazoleta.infrastructure.exceptionhandler;
 
-import com.pragma.plazoleta.infrastructure.exception.NoDataFoundException;
+import com.pragma.plazoleta.infrastructure.exception.InfraestructureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ControllerAdvisor {
 
-    @ExceptionHandler(NoDataFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoDataFoundException(NoDataFoundException ex) {
+    @ExceptionHandler(InfraestructureException.class)
+    public ResponseEntity<ErrorResponse> handleNoDataFoundException(InfraestructureException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getMessage()));
     }
