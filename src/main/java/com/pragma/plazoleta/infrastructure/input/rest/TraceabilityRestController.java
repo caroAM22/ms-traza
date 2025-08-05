@@ -37,7 +37,7 @@ public class TraceabilityRestController {
     }
     
     @GetMapping("/restaurant/{restaurantId}")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER')")
     @Operation(summary = "Get all traceability records", description = "Retrieves all traceability records")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
