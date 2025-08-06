@@ -2,13 +2,16 @@ package com.pragma.plazoleta.application.handler;
 
 import java.util.List;
 
-import com.pragma.plazoleta.application.dto.request.TraceabilityRequestDto;
-import com.pragma.plazoleta.application.dto.response.TraceabilityResponseDto;
+import com.pragma.plazoleta.application.dto.request.TraceabilityRequest;
+import com.pragma.plazoleta.application.dto.response.TraceabilityResponse;
+import com.pragma.plazoleta.application.dto.response.TraceabilityGroupedResponse;
+import com.pragma.plazoleta.application.dto.response.OrderSummaryResponse;
+import com.pragma.plazoleta.application.dto.response.EmployeeAverageTimeResponse;
 
 public interface ITraceabilityHandler {
-    TraceabilityResponseDto saveTraceability(TraceabilityRequestDto traceabilityRequestDto);
-    List<TraceabilityResponseDto> getTraceabilityByRestaurantId(String restaurantId);
-    List<TraceabilityResponseDto> getTraceabilityByOrderId(String orderId);
-    List<TraceabilityResponseDto> getTraceabilityByClientId();
-    List<TraceabilityResponseDto> getTraceabilityByEmployeeId(String employeeId);
+    TraceabilityResponse saveTraceability(TraceabilityRequest traceabilityRequestDto);
+    List<OrderSummaryResponse> getOrdersTraceabilityByRestaurantId(String restaurantId);
+    List<TraceabilityResponse> getTraceabilityByOrderId(String orderId);
+    List<TraceabilityGroupedResponse> getTraceabilityByClientId(String clientId);
+    List<EmployeeAverageTimeResponse> getEmployeeRankingByRestaurantId(String restaurantId);
 } 

@@ -5,26 +5,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.pragma.plazoleta.domain.api.ITraceabilityServicePort;
-import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.spi.ITraceabilityPersistencePort;
 import com.pragma.plazoleta.domain.usecase.TraceabilityUseCase;
-import com.pragma.plazoleta.infrastructure.output.mongodb.adapter.SecurityContextAdapter;
 import com.pragma.plazoleta.infrastructure.output.mongodb.adapter.TraceabilityPersistenceAdapter;
 import com.pragma.plazoleta.infrastructure.output.mongodb.mapper.ITraceabilityDocumentMapper;
 import com.pragma.plazoleta.infrastructure.output.mongodb.repository.ITraceabilityRepository;
-import com.pragma.plazoleta.infrastructure.security.JwtService;
 
 @Configuration
 @RequiredArgsConstructor
 public class BeanConfiguration {
     private final ITraceabilityRepository traceabilityRepository;
     private final ITraceabilityDocumentMapper traceabilityDocumentMapper;
-    private final JwtService jwtService;
-
-    @Bean
-    public ISecurityContextPort securityContextPort() {
-        return new SecurityContextAdapter(jwtService);
-    }
 
     @Bean
     public ITraceabilityPersistencePort traceabilityPersistencePort() {
@@ -33,6 +24,6 @@ public class BeanConfiguration {
 
     @Bean
     public ITraceabilityServicePort traceabilityServicePort() {
-        return new TraceabilityUseCase(traceabilityPersistencePort(), securityContextPort());
+        return new TraceabilityUseCase(traceabilityPersistencePort());
     }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ITraceabilityRepository extends MongoRepository<TraceabilityDocument, String> {
-    List<TraceabilityDocument> findByOrderIdAndClientId(String orderId, String clientId);
+    List<TraceabilityDocument> findByOrderId(String orderId);
     List<TraceabilityDocument> findByClientId(String clientId);
     List<TraceabilityDocument> findByEmployeeId(String employeeId);
     List<TraceabilityDocument> findByRestaurantId(String restaurantId);
