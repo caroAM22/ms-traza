@@ -1,8 +1,9 @@
 package com.pragma.plazoleta.domain.usecase;
 
-import com.pragma.plazoleta.domain.exception.DomainException;
 import com.pragma.plazoleta.domain.model.TraceabilityModel;
-import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
+import com.pragma.plazoleta.domain.model.OrderSummaryModel;
+import com.pragma.plazoleta.domain.model.TraceabilityGroupedModel;
+import com.pragma.plazoleta.domain.model.EmployeeAverageTimeModel;
 import com.pragma.plazoleta.domain.spi.ITraceabilityPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +30,8 @@ class TraceabilityUseCaseTest {
     @InjectMocks
     private TraceabilityUseCase traceabilityUseCase;
 
-    @Mock
-    private ISecurityContextPort securityContextPort;
-
-    private TraceabilityModel traceabilityModel;
+    private TraceabilityModel trace1;
+    private TraceabilityModel trace2;
     private UUID testId;
     private UUID testOrderId;
     private UUID testClientId;
@@ -47,14 +46,27 @@ class TraceabilityUseCaseTest {
         testEmployeeId = UUID.randomUUID();
         testRestaurantId = UUID.randomUUID();
 
-        traceabilityModel = TraceabilityModel.builder()
+        trace1 = TraceabilityModel.builder()
+                .id(testId)
+                .orderId(testOrderId)
+                .clientId(testClientId)
+                .clientEmail("client@example.com")
+                .date(LocalDateTime.now().minusMinutes(10))
+                .previousState("")
+                .newState("PENDING")
+                .employeeId(testEmployeeId)
+                .employeeEmail("employee@example.com")
+                .restaurantId(testRestaurantId)
+                .build();
+
+        trace2 = TraceabilityModel.builder()
                 .id(testId)
                 .orderId(testOrderId)
                 .clientId(testClientId)
                 .clientEmail("client@example.com")
                 .date(LocalDateTime.now())
                 .previousState("PENDING")
-                .newState("IN_PROGRESS")
+                .newState("DELIVERED")
                 .employeeId(testEmployeeId)
                 .employeeEmail("employee@example.com")
                 .restaurantId(testRestaurantId)
@@ -62,99 +74,153 @@ class TraceabilityUseCaseTest {
     }
 
     @Test
-    void saveTraceability_ShouldSetCreationDateAndReturnSavedModel() {
-        TraceabilityModel inputModel = TraceabilityModel.builder()
-                .orderId(testOrderId)
-                .clientId(testClientId)
-                .clientEmail("client@example.com")
-                .previousState("PENDING")
-                .newState("IN_PROGRESS")
-                .employeeId(testEmployeeId)
-                .employeeEmail("employee@example.com")
-                .build();
-
+    void saveTraceabilityShouldSetCreationDateAndReturnSavedModel() {
         when(traceabilityPersistencePort.saveTraceability(any(TraceabilityModel.class)))
-                .thenReturn(traceabilityModel);
-        TraceabilityModel result = traceabilityUseCase.saveTraceability(inputModel);
+                .thenReturn(trace1);
+        TraceabilityModel result = traceabilityUseCase.saveTraceability(trace1);
 
         assertNotNull(result);
-        assertNotNull(inputModel.getDate());
-        assertEquals(traceabilityModel.getId(), result.getId());
-        assertEquals(traceabilityModel.getOrderId(), result.getOrderId());
-        verify(traceabilityPersistencePort).saveTraceability(inputModel);
+        assertNotNull(trace1.getDate());
+        assertEquals(trace1.getId(), result.getId());
+        assertEquals(trace1.getOrderId(), result.getOrderId());
+        verify(traceabilityPersistencePort).saveTraceability(trace1);
     }
 
     @Test
-    void getTraceabilityByRestaurantIdShouldReturnAllTraceabilityRecords() {
-        List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
+    void getOrdersTraceabilityByRestaurantIdShouldReturnOrderSummaries() {
+        List<TraceabilityModel> traceabilityList = Arrays.asList(trace1, trace2);
         
-        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(expectedList);
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByRestaurantId(testRestaurantId);
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(traceabilityList);
+        List<OrderSummaryModel> result = traceabilityUseCase.getOrdersTraceabilityByRestaurantId(testRestaurantId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(traceabilityModel, result.get(0));
+        assertEquals(testOrderId, result.get(0).getOrderId());
+        assertEquals("DELIVERED", result.get(0).getFinalStatus());
+        assertEquals(testEmployeeId.toString(), result.get(0).getEmployeeId());
         verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
     }
 
     @Test
     void getTraceabilityByOrderIdShouldReturnTraceabilityRecords() {
-        List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
+        List<TraceabilityModel> expectedList = Arrays.asList(trace1, trace2);
 
-        when(traceabilityPersistencePort.findByOrderIdAndClientId(testOrderId, testClientId)).thenReturn(expectedList);
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("CUSTOMER");
-        when(securityContextPort.getUserIdOfUserAutenticated()).thenReturn(testClientId);
+        when(traceabilityPersistencePort.findByOrderId(testOrderId)).thenReturn(expectedList);
         List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByOrderId(testOrderId);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(traceabilityModel, result.get(0));
-        verify(traceabilityPersistencePort).findByOrderIdAndClientId(testOrderId, testClientId);
+        assertEquals(2, result.size());
+        assertEquals(trace1, result.get(0));
+        verify(traceabilityPersistencePort).findByOrderId(testOrderId);
     }
 
     @Test
-    void getTraceabilityByClientIdShouldReturnTraceabilityRecords() {
-        List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
+    void getTraceabilityByClientIdShouldReturnGroupedTraceability() {
+        List<TraceabilityModel> expectedList = Arrays.asList(trace1, trace2);
 
         when(traceabilityPersistencePort.findByClientId(testClientId)).thenReturn(expectedList);
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("CUSTOMER");
-        when(securityContextPort.getUserIdOfUserAutenticated()).thenReturn(testClientId);
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByClientId();
+        List<TraceabilityGroupedModel> result = traceabilityUseCase.getTraceabilityByClientId(testClientId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(traceabilityModel, result.get(0));
+        assertEquals(testOrderId, result.get(0).getOrderId());
+        assertEquals(2, result.get(0).getTraceabilityList().size());
         verify(traceabilityPersistencePort).findByClientId(testClientId);
     }
 
     @Test
-    void getTraceabilityByEmployeeIdShouldReturnTraceabilityRecords() {
-        List<TraceabilityModel> expectedList = Arrays.asList(traceabilityModel);
-
-        when(traceabilityPersistencePort.findByEmployeeId(testEmployeeId)).thenReturn(expectedList);
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
-        List<TraceabilityModel> result = traceabilityUseCase.getTraceabilityByEmployeeId(testEmployeeId);
+    void getEmployeeTraceabilityByRestaurantIdShouldReturnEmployeeRanking() {
+        List<TraceabilityModel> traceabilityList = Arrays.asList(trace1, trace2);
+        
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(traceabilityList);
+        List<EmployeeAverageTimeModel> result = traceabilityUseCase.getEmployeeTraceabilityByRestaurantId(testRestaurantId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(traceabilityModel, result.get(0));
-        verify(traceabilityPersistencePort).findByEmployeeId(testEmployeeId);
-    }
-
-    @Test
-    void validateUserRoleShouldThrowExceptionWhenUserIsNotOwner() {
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("CUSTOMER");
-    
-        assertThrows(DomainException.class, () -> traceabilityUseCase.getTraceabilityByRestaurantId(testRestaurantId));
-        verify(securityContextPort).getRoleOfUserAutenticated();
-    }
-
-    @Test
-    void validateUserRoleShouldNotThrowExceptionWhenUserIsOwner() {
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
-        traceabilityUseCase.getTraceabilityByRestaurantId(testRestaurantId);
+        assertEquals(testEmployeeId, result.get(0).getEmployeeId());
+        assertNotNull(result.get(0).getAverageTime());
+        assertTrue(result.get(0).getAverageTime().toMinutes() > 0);
         verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
-        verify(securityContextPort).getRoleOfUserAutenticated();
+    }
+
+    @Test
+    void getEmployeeTraceabilityByRestaurantIdShouldFilterIncompleteOrders() {
+        List<TraceabilityModel> traceabilityList = Arrays.asList(trace1);
+        
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(traceabilityList);
+        List<EmployeeAverageTimeModel> result = traceabilityUseCase.getEmployeeTraceabilityByRestaurantId(testRestaurantId);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+        verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
+    }
+
+    @Test
+    void getEmployeeTraceabilityByRestaurantIdShouldReturnEmptyListWhenTheFirstStateIsNotPending() {
+        List<TraceabilityModel> traceabilityList = Arrays.asList(trace2);
+        
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(traceabilityList);
+        List<EmployeeAverageTimeModel> result = traceabilityUseCase.getEmployeeTraceabilityByRestaurantId(testRestaurantId);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+        verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
+    }
+
+    @Test
+    void getEmployeeTraceabilityByRestaurantIdShouldReturnEmptyListWhenTraceabilityListNotHaveEmployeeId() {
+        trace1.setEmployeeId(null);
+        trace2.setEmployeeId(null);
+        List<TraceabilityModel> traceabilityList = Arrays.asList(trace1, trace2);
+        
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(traceabilityList);
+        List<EmployeeAverageTimeModel> result = traceabilityUseCase.getEmployeeTraceabilityByRestaurantId(testRestaurantId);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+        verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
+    }
+
+
+    @Test
+    void getEmployeeRankingShouldArrangeAscending() {
+        UUID employeeId = UUID.randomUUID();
+        UUID order2Id = UUID.randomUUID();
+        TraceabilityModel trace3 = TraceabilityModel.builder()
+                .id(testId)
+                .orderId(order2Id)
+                .clientId(testClientId)
+                .clientEmail("client@example.com")
+                .date(LocalDateTime.now().minusMinutes(20))
+                .previousState("")
+                .newState("PENDING")
+                .employeeId(employeeId)
+                .employeeEmail("employee@example.com")
+                .restaurantId(testRestaurantId)
+                .build();
+
+        TraceabilityModel trace4 = TraceabilityModel.builder()
+                .id(testId)
+                .orderId(order2Id)
+                .clientId(testClientId)
+                .clientEmail("client@example.com")
+                .date(LocalDateTime.now())
+                .previousState("PENDING")
+                .newState("DELIVERED")
+                .employeeId(employeeId)
+                .employeeEmail("employee@example.com")
+                .restaurantId(testRestaurantId)
+                .build();
+        List<TraceabilityModel> traceabilityList = Arrays.asList(trace3, trace4, trace1, trace2);
+        
+        when(traceabilityPersistencePort.findByRestaurantId(testRestaurantId)).thenReturn(traceabilityList);
+        List<EmployeeAverageTimeModel> result = traceabilityUseCase.getEmployeeTraceabilityByRestaurantId(testRestaurantId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(testEmployeeId, result.get(0).getEmployeeId());
+        assertEquals(employeeId, result.get(1).getEmployeeId());
+        assertTrue(result.get(0).getAverageTime().toMinutes() < result.get(1).getAverageTime().toMinutes());
+        verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
     }
 } 

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TraceabilityResponseDto {
+public class TraceabilityResponse {
     private String id;
     private String orderId;
     private String clientId;

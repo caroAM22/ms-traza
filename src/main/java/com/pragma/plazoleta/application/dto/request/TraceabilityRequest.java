@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Pattern;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TraceabilityRequestDto {
+public class TraceabilityRequest {
     @NotNull(message = "Order ID is required")
     @Pattern(regexp = RegexPattern.UUID_PATTERN, 
              message = "Order ID must be a valid UUID format")
@@ -31,7 +31,7 @@ public class TraceabilityRequestDto {
     @Email(message = "Client email must be valid")
     private String clientEmail;
     
-    @NotBlank(message = "Previous state is required")
+    
     @Pattern(regexp = RegexPattern.ORDER_STATUS_PATTERN, 
              message = "Previous state must be one of: PENDING, IN_PROGRESS, READY, DELIVERED, CANCELLED")
     private String previousState;

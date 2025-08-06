@@ -9,8 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.pragma.plazoleta.application.dto.request.TraceabilityRequestDto;
-import com.pragma.plazoleta.application.dto.response.TraceabilityResponseDto;
+import com.pragma.plazoleta.application.dto.request.TraceabilityRequest;
+import com.pragma.plazoleta.application.dto.response.TraceabilityResponse;
+import com.pragma.plazoleta.application.dto.response.TraceabilityGroupedResponse;
+import com.pragma.plazoleta.application.dto.response.OrderSummaryResponse;
+import com.pragma.plazoleta.application.dto.response.EmployeeAverageTimeResponse;
 import com.pragma.plazoleta.application.handler.ITraceabilityHandler;
 
 import jakarta.validation.Valid;
@@ -31,19 +34,19 @@ public class TraceabilityRestController {
         @ApiResponse(responseCode = "201", description = "Traceability record created successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid request data")
     })
-    public ResponseEntity<TraceabilityResponseDto> saveTraceability(@Valid @RequestBody TraceabilityRequestDto traceabilityRequestDto) {
-        TraceabilityResponseDto response = traceabilityHandler.saveTraceability(traceabilityRequestDto);
+    public ResponseEntity<TraceabilityResponse> saveTraceability(@Valid @RequestBody TraceabilityRequest traceabilityRequestDto) {
+        TraceabilityResponse response = traceabilityHandler.saveTraceability(traceabilityRequestDto);
         return ResponseEntity.ok(response);
     }
     
     @GetMapping("/restaurant/{restaurantId}")
     @PreAuthorize("hasAnyRole('OWNER')")
-    @Operation(summary = "Get all traceability records", description = "Retrieves all traceability records")
+    @Operation(summary = "Get order summaries by restaurant", description = "Retrieves order summaries with start/end times for completed orders")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
+        @ApiResponse(responseCode = "200", description = "Order summaries retrieved successfully")
     })
-    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByRestaurantId(@PathVariable String restaurantId) {
-        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByRestaurantId(restaurantId);
+    public ResponseEntity<List<OrderSummaryResponse>> getOrdersTraceabilityByRestaurantId(@PathVariable String restaurantId) {
+        List<OrderSummaryResponse> response = traceabilityHandler.getOrdersTraceabilityByRestaurantId(restaurantId);
         return ResponseEntity.ok(response);
     }
     
@@ -53,30 +56,30 @@ public class TraceabilityRestController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
     })
-    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByOrderId(@PathVariable String orderId) {
-        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByOrderId(orderId);
+    public ResponseEntity<List<TraceabilityResponse>> getTraceabilityByOrderId(@PathVariable String orderId) {
+        List<TraceabilityResponse> response = traceabilityHandler.getTraceabilityByOrderId(orderId);
         return ResponseEntity.ok(response);
     }
     
-    @GetMapping("/client")
+    @GetMapping("/client/{clientId}")
     @PreAuthorize("hasAnyRole('CUSTOMER')")
-    @Operation(summary = "Get traceability by client ID", description = "Retrieves traceability records for a specific client")
+    @Operation(summary = "Get traceability by client ID", description = "Retrieves traceability records grouped by order ID for the authenticated client")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
     })
-    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByClientId() {
-        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByClientId();
+    public ResponseEntity<List<TraceabilityGroupedResponse>> getTraceabilityByClientId(@PathVariable String clientId) {
+        List<TraceabilityGroupedResponse> response = traceabilityHandler.getTraceabilityByClientId(clientId);
         return ResponseEntity.ok(response);
     }
     
-    @GetMapping("/employee/{employeeId}")
+    @GetMapping("/employee/{restaurantId}")
     @PreAuthorize("hasAnyRole('OWNER')")
-    @Operation(summary = "Get traceability by employee ID", description = "Retrieves traceability records for a specific employee")
+    @Operation(summary = "Get employee ranking by restaurant", description = "Retrieves employee performance ranking with average order times")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Traceability records retrieved successfully")
+        @ApiResponse(responseCode = "200", description = "Employee ranking retrieved successfully")
     })
-    public ResponseEntity<List<TraceabilityResponseDto>> getTraceabilityByEmployeeId(@PathVariable String employeeId) {
-        List<TraceabilityResponseDto> response = traceabilityHandler.getTraceabilityByEmployeeId(employeeId);
+    public ResponseEntity<List<EmployeeAverageTimeResponse>> getEmployeeRankingByRestaurantId(@PathVariable String restaurantId) {
+        List<EmployeeAverageTimeResponse> response = traceabilityHandler.getEmployeeRankingByRestaurantId(restaurantId);
         return ResponseEntity.ok(response);
-    }
+    } 
 } 
