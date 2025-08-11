@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmployeeAverageTimeResponse {
     private String employeeId;
-    private String averageTime;
+    private String formattedAverageTime;
 } 

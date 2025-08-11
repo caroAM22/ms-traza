@@ -139,7 +139,7 @@ class TraceabilityUseCaseTest {
         assertEquals(1, result.size());
         assertEquals(testEmployeeId, result.get(0).getEmployeeId());
         assertNotNull(result.get(0).getAverageTime());
-        assertTrue(result.get(0).getAverageTime().toMinutes() > 0);
+        assertTrue(result.get(0).getFormattedAverageTime().contains("ms"));
         verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
     }
 
@@ -220,7 +220,8 @@ class TraceabilityUseCaseTest {
         assertEquals(2, result.size());
         assertEquals(testEmployeeId, result.get(0).getEmployeeId());
         assertEquals(employeeId, result.get(1).getEmployeeId());
-        assertTrue(result.get(0).getAverageTime().toMinutes() < result.get(1).getAverageTime().toMinutes());
+        assertEquals("600000 ms", result.get(0).getFormattedAverageTime());
+        assertEquals("1200000 ms", result.get(1).getFormattedAverageTime());
         verify(traceabilityPersistencePort).findByRestaurantId(testRestaurantId);
     }
 } 

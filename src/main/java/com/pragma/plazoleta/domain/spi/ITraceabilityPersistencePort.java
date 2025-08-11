@@ -10,5 +10,4 @@ public interface ITraceabilityPersistencePort {
     List<TraceabilityModel> findByRestaurantId(UUID restaurantId);
     List<TraceabilityModel> findByOrderId(UUID orderId);
     List<TraceabilityModel> findByClientId(UUID clientId);
-    List<TraceabilityModel> findByEmployeeId(UUID employeeId);
 } 

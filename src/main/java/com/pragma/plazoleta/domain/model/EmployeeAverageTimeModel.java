@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Duration;
 import java.util.UUID;
 
 @Data
@@ -14,21 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EmployeeAverageTimeModel {
     private UUID employeeId;
-    private Duration averageTime;
-    
-    public String getFormattedAverageTime() {
-        if (averageTime == null) {
-            return null;
-        }
-        
-        long totalSeconds = averageTime.getSeconds();
-        long minutes = totalSeconds / 60;
-        long seconds = totalSeconds % 60;
-        
-        if (minutes > 0) {
-            return String.format("%dm %ds", minutes, seconds);
-        } else {
-            return String.format("%ds", seconds);
-        }
-    }
+    private Long averageTime;
+    private String formattedAverageTime;
 } 

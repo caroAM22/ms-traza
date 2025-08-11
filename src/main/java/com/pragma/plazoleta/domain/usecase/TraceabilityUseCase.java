@@ -8,7 +8,6 @@ import com.pragma.plazoleta.domain.model.EmployeeAverageTimeModel;
 import com.pragma.plazoleta.domain.spi.ITraceabilityPersistencePort;
 import lombok.RequiredArgsConstructor;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class TraceabilityUseCase implements ITraceabilityServicePort {
     
@@ -110,14 +107,16 @@ public class TraceabilityUseCase implements ITraceabilityServicePort {
     private Optional<EmployeeAverageTimeModel> createEmployeeAverageTime(Map.Entry<UUID, List<OrderSummaryModel>> entry) {
         UUID employeeId = entry.getKey();
         List<OrderSummaryModel> orders = entry.getValue();
-        long totalSeconds = orders.stream()
-                .mapToLong(order -> java.time.Duration.between(order.getStartTime(), order.getEndTime()).getSeconds())
-                .sum();
-        double averageSeconds = (double) totalSeconds / orders.size();
+        long totalMillis = orders.stream()
+            .mapToLong(order -> java.time.Duration.between(order.getStartTime(), order.getEndTime()).toMillis())
+            .sum();
+    
+        double averageMillis = (double) totalMillis / orders.size();
         
         return Optional.of(EmployeeAverageTimeModel.builder()
                 .employeeId(employeeId)
-                .averageTime(Duration.ofSeconds((long) averageSeconds))
+                .averageTime((long) averageMillis)
+                .formattedAverageTime(String.format("%.0f ms", averageMillis))
                 .build());
     }
 } 

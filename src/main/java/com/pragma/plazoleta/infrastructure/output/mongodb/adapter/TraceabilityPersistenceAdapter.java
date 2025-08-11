@@ -41,10 +41,4 @@ public class TraceabilityPersistenceAdapter implements ITraceabilityPersistenceP
         var documents = traceabilityRepository.findByClientId(clientId.toString());
         return traceabilityDocumentMapper.toTraceabilityModelList(documents);
     }
-    
-    @Override
-    public List<TraceabilityModel> findByEmployeeId(UUID employeeId) {
-        var documents = traceabilityRepository.findByEmployeeId(employeeId.toString());
-        return traceabilityDocumentMapper.toTraceabilityModelList(documents);
-    }
 } 
